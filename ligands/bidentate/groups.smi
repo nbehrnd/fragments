@@ -1,5 +1,7 @@
 [CH3]C([O][*]1)=CC(=[O]1)[CH3] a acac-acetylacetonate
 C12=CC=CC=[N]1[*][N]3=C2C=CC=C3 a bpy-bipyridine
+[C@H]1(COC2=[N]1*[N]1=C(C2)OC[C@H]1C)C a (4R12R)-dimethyl-bisoxaline
+C[C@H]1COC2=[N]1*[N]1=C(C2)OC[C@@H]1C a (4S12S)-dimethyl-bisoxaline
 O[N]1=CC=[N](O)*1 a dimethylglyoxime
 [*]1[SH0][CH][CH][SH0]1 a dithiolene
 C[P]1(C)CC[P](C)(C)*1 a dmpe-1,2-bis(dimethylphosphino)ethane
