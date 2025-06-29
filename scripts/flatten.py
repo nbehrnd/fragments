@@ -3,6 +3,37 @@ import json
 from pathlib import Path
 
 
+def get_args():
+    """Collect command-line arguments"""
+    parser = argparse.ArgumentParser(
+        description="script to flatten .json files for structure templates of Avogadro",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "directory",
+        help="directory of files to process",
+        type=Path,
+    )
+
+    parser.add_argument(
+        "-m",
+        "--minimize",
+        help="reduce JSON to retain only atoms, bonds, charges, and spin",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "-r",
+        "--round_coords",
+        metavar="round_coords",
+        help="number of decimals of atomic coordinates to round to",
+        type=int,
+        default=5,
+    )
+
+    return parser.parse_args()
+
+
 def recursive_search(path: Path):
     file_list = []
     file_list.extend([x for x in path.iterdir() if x.is_file()])
@@ -111,13 +142,7 @@ def flatten_all(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("directory", type=Path)
-    parser.add_argument("-m", "--minimize", action="store_true")
-    parser.add_argument(
-        "-r", "--round_coords", nargs="?", type=int, const=5, default=None
-    )
-    args = parser.parse_args()
+    args = get_args()
 
     # Get all CJSON files in dir
     file_list = recursive_search(args.directory)
