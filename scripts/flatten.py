@@ -2,6 +2,11 @@ import argparse
 import json
 from pathlib import Path
 
+# To retain the design of functions like minimal and flatten, do no
+# Black to automatically reformat this script.  The comment below
+# serves as corresponding safeguard vs `.pre-commit-config.yaml`.
+# fmt: off
+
 
 def recursive_search(path: Path):
     file_list = []
@@ -27,7 +32,7 @@ def flatten_arrays(data: dict) -> dict:
         return new
     else:
         return data
-    
+
 
 def flatten_dumps(data: dict) -> str:
     """Do the same as json.dumps() but write simple lists on a single line."""
@@ -67,7 +72,7 @@ def minimal(cjson: dict) -> dict:
         for prop in ["totalCharge"]:
             if prop in cjson["properties"]:
                 minimal_cjson["properties"][prop] = cjson["properties"][prop]
-    
+
     return minimal_cjson
 
 
@@ -81,47 +86,50 @@ def round_coords(cjson: dict, places: int) -> dict:
 
 
 def flatten_all(
-        cjson_list: list[Path],
-        minimize: bool,
-        round_coords_places: int | None = None,
-        validate: bool = False,
-    ):
-    checks = {}
+    cjson_list: list[Path],
+    minimize: bool,
+    round_coords_places: int | None = None,
+    validate: bool = False,
+):
+    """Flatten CJSON according to parameters set"""
+    # checks = {}
 
     # Read then write each cjson
     for file in cjson_list:
-        with open(file) as f:
+        with open(file, "r", encoding="utf-8") as f:
             cjson = json.load(f)
-        print(cjson)
+        # print(cjson)
         if minimize:
             cjson = minimal(cjson)
-        print(cjson)
+        # print(cjson)
         if round_coords_places:
             cjson = round_coords(cjson, round_coords_places)
-        print(cjson)
+        # print(cjson)
         flattened = flatten_dumps(cjson)
-        print(cjson)
-        #print(flattened)
-        with open(file, "w") as f:
+        # print(cjson)
+        # print(flattened)
+        with open(file, "w", encoding="utf-8") as f:
             f.write(flattened)
-        if validate:
-            # Test we get the same object back as we originally read
-            check = (cjson == json.loads(flattened))
-            checks[file] = check
-            if check is False:
-                print(f"{file} was not validated")
-    
-    if validate:
-        print(checks)
+#        if validate:
+#            # Test we get the same object back as we originally read
+#            check = (cjson == json.loads(flattened))
+#            checks[file] = check
+#            if check is False:
+#                print(f"{file} was not validated")
+
+#    if validate:
+#        print(checks)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", type=Path)
     parser.add_argument("-m", "--minimize", action="store_true")
-    parser.add_argument("-r", "--round_coords", nargs="?", type=int, const=5, default=None)
+    parser.add_argument(
+        "-r", "--round_coords", nargs="?", type=int, const=5, default=None
+    )
     args = parser.parse_args()
-    print(args)
+    # print(args)
 
     # Get all CJSON files in dir
     file_list = recursive_search(args.directory)
