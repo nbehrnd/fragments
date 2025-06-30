@@ -13,6 +13,7 @@ def get_args():
         description="script to flatten .json files for structure templates of Avogadro",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+
     parser.add_argument(
         "directory",
         help="directory of files to process",
@@ -20,19 +21,30 @@ def get_args():
     )
 
     parser.add_argument(
-        "-m",
-        "--minimize",
-        help="reduce JSON to retain only atoms, bonds, charges, and spin",
-        action="store_true",
-    )
-
-    parser.add_argument(
         "-r",
         "--round_coords",
-        metavar="round_coords",
         help="number of decimals of atomic coordinates to round to",
         type=int,
         default=5,
+    )
+
+    group = parser.add_argument_group(
+        "mutually exclusive options",
+        "if originally assigned, a processed CJSON file will either retain",
+    )
+    exclusive_group = group.add_mutually_exclusive_group(required=False)
+    exclusive_group.add_argument(
+        "-m",
+        "--minimize",
+        help="atoms, bonds, charges, and spin",
+        action="store_true",
+    )
+
+    exclusive_group.add_argument(
+        "-n",
+        "--minimize2",
+        help="atoms, bonds, charges, but no spin",
+        action="store_true",
     )
 
     return parser.parse_args()
@@ -74,7 +86,7 @@ def flatten_dumps(data: dict) -> str:
     return output
 
 
-def minimal(cjson: dict) -> dict:
+def minimal(cjson: dict, minimize, minimize2) -> dict:
     """Reduce a CJSON to core geometry data.
 
     This retains the atoms with their coordinates, bonds, charges, and spin."""
@@ -95,7 +107,14 @@ def minimal(cjson: dict) -> dict:
     # Keep total charge/spin if present
     if "properties" in cjson:
         minimal_cjson["properties"] = {}
-        for prop in ["totalCharge", "totalSpinMultiplicity"]:
+
+        properties_to_retain = []
+        if minimize:
+            properties_to_retain = ["totalCharge", "totalSpinMultiplicity"]
+        if minimize2:
+            properties_to_retain = ["totalCharge"]
+
+        for prop in properties_to_retain:
             if prop in cjson["properties"]:
                 minimal_cjson["properties"][prop] = cjson["properties"][prop]
 
@@ -113,25 +132,27 @@ def round_coords(cjson: dict, places: int) -> dict:
 def flatten_all(
     cjson_list: list[Path],
     minimize: bool,
+    minimize2: bool,
     round_coords_places: int | None = None,
     validate: bool = False,
 ):
+    """Flatten CSON according to parameters set"""
     checks = {}
 
     # Read then write each cjson
     for file in cjson_list:
-        with open(file) as source:
+        with open(file, "r", encoding="utf-8") as source:
             cjson = json.load(source)
 
-        if minimize:
-            cjson = minimal(cjson)
+        if minimize or minimize2:
+            cjson = minimal(cjson, minimize, minimize2)
 
         if round_coords_places:
             cjson = round_coords(cjson, round_coords_places)
 
         flattened = flatten_dumps(cjson)
 
-        with open(file, "w") as new:
+        with open(file, "w", encoding="utf-8") as new:
             new.write(flattened)
 
 
@@ -153,4 +174,4 @@ if __name__ == "__main__":
     file_list = recursive_search(args.directory)
     cjson_list = [f for f in file_list if f.suffix == ".cjson"]
 
-    flatten_all(cjson_list, args.minimize, args.round_coords)
+    flatten_all(cjson_list, args.minimize, args.minimize2, args.round_coords)
