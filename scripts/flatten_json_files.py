@@ -25,7 +25,7 @@ def get_args():
         "--round_coords",
         help="number of decimals of atomic coordinates to round to",
         type=int,
-        default=5,
+        default=4,
     )
 
     group = parser.add_argument_group(
